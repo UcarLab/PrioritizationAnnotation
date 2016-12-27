@@ -94,7 +94,7 @@ public class NearestTSSUtil {
 		
 		for(Iterator<TSS> it = tssinchr.iterator(); it.hasNext();){
 			TSS next = it.next();
-			if(sortingstructure.containsKey(next.tss)){
+			if(!sortingstructure.containsKey(next.tss)){
 				sortingstructure.put(next.tss, new LinkedList<TSS>());
 			}
 			sortingstructure.get(next.tss).add(next);

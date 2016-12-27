@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import nearestgene.NearestTSSUtil;
 import nearestgene.NearestTSSUtil.TSS;
@@ -66,7 +67,7 @@ public class Prioritization {
 	private static int downtss = 2000;
 	
 	public static void main(String[] args){
-		if(args.length == 6){
+		if(args.length == 9){
 			Prioritization p = new Prioritization();
 			//args[0] - Filepath to DNase/Node Annotations
 			//args[1] - Filepath to ChromHMM States preprocessed where first column is chromosome (eg. chr1), second and third are start and end positions, and the fourth column has a character among { P, I, R, A, T, E, S }
@@ -74,7 +75,7 @@ public class Prioritization {
 			//args[3] - Filepath to Stretch Enhancers (BED Format/chr star end)
 			//args[4] - Filepath to Super Enhancers (BED Format/chr star end)
 			p.getAnnotations(args[0], args[1], args[2], args[3], args[4], args[8], args[5]);
-			uptss = Integer.parseInt(args[6]);
+			uptss = Integer.parseInt(args[6]);	//TODO There may be issues if the upstream and downstream are different, may need to look into this further
 			downtss = Integer.parseInt(args[7]);
 			
 		}
@@ -536,7 +537,6 @@ public class Prioritization {
 	}
 	
 	private Location[] getTSS(String refflatpath){
-		LinkedList<Location> rv = new LinkedList<Location>();
 		NearestTSSUtil ntssu = null;
 		try {
 			ntssu = new NearestTSSUtil(refflatpath);
@@ -547,14 +547,24 @@ public class Prioritization {
 		}
 		TSS[] tsslocations = ntssu.getTSSLocations();
 		
+		TreeSet<String> seen = new TreeSet<String>();
+		LinkedList<Location> rv = new LinkedList<Location>();
 		for(int i = 0; i < tsslocations.length; i++){
 			String chr = tsslocations[i].getChr();
 			int tss = tsslocations[i].getTSS();
 			if(tsslocations[i].getStrand().equals("-")){
-				rv.add(new Location(-1, chr, tss-downtss, tss+uptss));
+				String seenkey = chr+(tss-downtss);
+				if(!seen.contains(seenkey)){
+					rv.add(new Location(-1, chr, tss-downtss, tss+uptss));
+					seen.add(seenkey);
+				}
 			}
 			else{
-				rv.add(new Location(-1, chr, tss-uptss, tss+downtss));
+				String seenkey = chr+(tss-uptss);
+				if(!seen.contains(seenkey)){
+					rv.add(new Location(-1, chr, tss-uptss, tss+downtss));
+					seen.add(seenkey);
+				}
 			}
 		}
 		
